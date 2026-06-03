@@ -3,8 +3,10 @@ import gsap from 'gsap';
 import { Tooltip } from 'react-tooltip';
 import 'react-tooltip/dist/react-tooltip.css';
 import { dockApps } from '#constants';
+import useWindowStore from '#store/window';
 
 const Dock = ({ onOpen = () => {} }) => {
+  const { openWindow, closeWindow, windows } = useWindowStore();
   const dockRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -57,31 +59,37 @@ const Dock = ({ onOpen = () => {} }) => {
     };
   }, []);
 
-  const handleOpenApp = (id, canOpen) => {
-    if (!canOpen) return;
-    onOpen(id);
+  const toggleApp = (app) => {
+    if (!app.canOpen) return;
+
+    if (windows[app.id]?.isOpen) {
+      closeWindow(app.id);
+    } else {
+      openWindow(app.id);
+      onOpen(app.id);
+    }
   };
 
   return (
     <section id="dock" aria-label="Application dock">
       <div ref={dockRef} className="dock-container">
-        {dockApps.map(({ id, name, icon, canOpen }) => (
-          <div key={id} className="relative flex justify-center">
+        {dockApps.map((app) => (
+          <div key={app.id} className="relative flex justify-center">
             <button
               type="button"
               className="dock-icon"
-              aria-label={name}
+              aria-label={app.name}
               data-tooltip-id="dock-tooltip"
-              data-tooltip-content={name}
+              data-tooltip-content={app.name}
               data-tooltip-delay-show={150}
-              disabled={!canOpen}
-              onClick={() => handleOpenApp(id, canOpen)}
+              disabled={!app.canOpen}
+              onClick={() => toggleApp(app)}
             >
               <img
-                src={`/images/${icon}`}
-                alt={name}
+                src={`/images/${app.icon}`}
+                alt={app.name}
                 loading="lazy"
-                className={`size-full ${canOpen ? '' : 'opacity-60'}`}
+                className={`size-full ${app.canOpen ? '' : 'opacity-60'}`}
               />
             </button>
           </div>
